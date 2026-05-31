@@ -1,11 +1,15 @@
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 const SECRET       = process.env.ADMIN_JWT_SECRET!;
 const COOKIE_NAME  = "rr_admin_token";
 const COOKIE_MAX   = 60 * 60 * 8; // 8 hours
+
+function sha256(input: string): string {
+  return crypto.createHash("sha256").update(input).digest("hex");
+}
 
 export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
   const validUsername = process.env.ADMIN_USERNAME;
@@ -14,7 +18,12 @@ export async function verifyAdminCredentials(username: string, password: string)
   if (!validUsername || !passwordHash) return false;
   if (username !== validUsername)      return false;
 
-  return bcrypt.compare(password, passwordHash);
+  // Constant-time comparison to prevent timing attacks
+  const inputHash    = sha256(password);
+  const expectedHash = Buffer.from(passwordHash, "hex");
+  const actualHash   = Buffer.from(inputHash,    "hex");
+  if (expectedHash.length !== actualHash.length) return false;
+  return crypto.timingSafeEqual(expectedHash, actualHash);
 }
 
 export function createAdminToken(): string {
