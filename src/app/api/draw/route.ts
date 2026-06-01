@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { conductDraw } from "@/lib/draw";
 import { getAdminFromRequest } from "@/lib/admin-auth";

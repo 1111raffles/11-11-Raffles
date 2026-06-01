@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminCredentials, createAdminToken, adminCookieOptions } from "@/lib/admin-auth";
 import { z } from "zod";
