@@ -6,6 +6,8 @@ import { Navbar } from "@/components/Navbar";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { Basket } from "@/components/Basket";
 import { Toaster } from "react-hot-toast";
+import { getAdminFromCookies } from "@/lib/admin-auth";
+import { headers } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,13 +16,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title:       { default: "Raffle Rumble", template: "%s | Raffle Rumble" },
+  title:       { default: "Planet Raffle", template: "%s | Planet Raffle" },
   description: "UK's most exciting technology raffle. Win premium tech for just £1. Daily draws at 11:11 PM.",
-  keywords:    ["raffle", "technology", "prize", "win", "MacBook", "iPhone", "PlayStation"],
+  keywords:    ["raffle", "technology", "prize", "win", "MacBook", "iPhone", "PlayStation", "planet raffle"],
   openGraph: {
     type:        "website",
-    siteName:    "Raffle Rumble",
-    title:       "Raffle Rumble — Win Premium Tech from £1",
+    siteName:    "Planet Raffle",
+    title:       "Planet Raffle — Win Premium Tech from £1",
     description: "UK's most exciting technology raffle. Win premium tech for just £1. Daily draws at 11:11 PM.",
   },
   robots: { index: true, follow: true },
@@ -31,15 +33,19 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname    = headers().get("x-pathname") ?? "";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdmin     = !isAdminRoute && await getAdminFromCookies().catch(() => false);
+
   return (
     <html lang="en" className={inter.variable}>
       <body className="bg-[#050505] text-white antialiased">
         <Providers>
-          <AnnouncementBanner />
-          <Navbar />
+          {!isAdminRoute && <AnnouncementBanner />}
+          {!isAdminRoute && <Navbar isAdmin={isAdmin} />}
           <main className="min-h-screen">{children}</main>
-          <Basket />
+          {!isAdminRoute && <Basket />}
           <Toaster
             position="bottom-right"
             toastOptions={{
@@ -49,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 border:     "1px solid #222",
                 borderRadius: "12px",
               },
-              success: { iconTheme: { primary: "#f59e0b", secondary: "#000" } },
+              success: { iconTheme: { primary: "#8b5cf6", secondary: "#000" } },
             }}
           />
         </Providers>

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { PurchasePackages } from "@/components/PurchasePackages";
-import { LiveDraw } from "@/components/LiveDraw";
+import { SlotMachineDraw } from "@/components/SlotMachineDraw";
 import { Trophy, Ticket, Clock, Users, ChevronRight, Flame } from "lucide-react";
 import Link from "next/link";
 
@@ -28,7 +28,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {featured && <LiveDraw raffleId={featured.id} />}
+      {featured && <SlotMachineDraw raffleId={featured.id} />}
 
       <div className="mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 lg:px-8">
 
@@ -95,7 +95,7 @@ export default async function HomePage() {
                 {[
                   { label: "Ticket price",   value: `£${featured.ticketPrice.toFixed(0)}`,                  icon: <Ticket size={14} /> },
                   { label: "Tickets left",   value: (featured.totalTickets - featured.soldTickets).toLocaleString(), icon: <Users  size={14} /> },
-                  { label: "Draw time",      value: "11:11 PM",                                              icon: <Clock  size={14} /> },
+                  { label: "Draw time",      value: new Date(featured.drawTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" }), icon: <Clock  size={14} /> },
                 ].map(({ label, value, icon }) => (
                   <div key={label} className="rounded-2xl border border-white/5 bg-[#111] p-4 text-center">
                     <div className="flex items-center justify-center gap-1.5 text-xs text-white/40">
@@ -214,7 +214,7 @@ export default async function HomePage() {
           <p className="mt-2 text-white/50">Join thousands of players. Every ticket is just £1.</p>
           <Link
             href="/signup"
-            className="btn-gold mt-6 inline-flex items-center gap-2 rounded-xl bg-gold-500 px-8 py-4 text-base font-bold text-black transition hover:bg-gold-400"
+            className="btn-gold mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 px-8 py-4 text-base font-bold text-white transition hover:opacity-90"
           >
             Create Free Account
             <ChevronRight size={18} />

@@ -12,30 +12,50 @@ const itemSchema = z.object({
 });
 
 const bodySchema = z.object({
-  items: z.array(itemSchema).min(1).max(20),
+  items:      z.array(itemSchema).min(1).max(20),
+  guestName:  z.string().min(2).max(40).optional(),
+  guestEmail: z.string().email().optional(),
 });
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
-  }
-
   try {
     const body   = await req.json();
     const parsed = bodySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid items" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const userId    = (session.user as { id: string }).id;
-    const userEmail = session.user.email!;
-    const origin    = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
+    const session = await getServerSession(authOptions);
+    const origin  = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
+
+    // Authenticated user
+    if (session?.user) {
+      const userId    = (session.user as { id: string }).id;
+      const userEmail = session.user.email!;
+      const userName  = session.user.name ?? "Raffler";
+
+      const stripeSession = await createCheckoutSession({
+        items:      parsed.data.items as Array<{ raffleId: string; packageType: PackageType; quantity: number }>,
+        userId,
+        userEmail,
+        userName,
+        successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl:  `${origin}/?cancelled=1`,
+      });
+
+      return NextResponse.json({ url: stripeSession.url });
+    }
+
+    // Guest checkout
+    const { guestName, guestEmail } = parsed.data;
+    if (!guestName || !guestEmail) {
+      return NextResponse.json({ error: "Please enter your name and email to continue" }, { status: 400 });
+    }
 
     const stripeSession = await createCheckoutSession({
-      items:      parsed.data.items,
-      userId,
-      userEmail,
+      items:      parsed.data.items as Array<{ raffleId: string; packageType: PackageType; quantity: number }>,
+      guestName,
+      guestEmail,
       successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl:  `${origin}/?cancelled=1`,
     });

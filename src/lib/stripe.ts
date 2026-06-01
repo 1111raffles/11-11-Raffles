@@ -11,19 +11,18 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   typescript: true,
 });
 
-export async function createCheckoutSession({
-  items,
-  userId,
-  userEmail,
-  successUrl,
-  cancelUrl,
-}: {
+type CheckoutParams = {
   items:      Array<{ raffleId: string; packageType: PackageType; quantity: number }>;
-  userId:     string;
-  userEmail:  string;
   successUrl: string;
   cancelUrl:  string;
-}) {
+} & (
+  | { userId: string; userEmail: string; userName: string; guestName?: never; guestEmail?: never }
+  | { guestName: string; guestEmail: string; userId?: never; userEmail?: never; userName?: never }
+);
+
+export async function createCheckoutSession(params: CheckoutParams) {
+  const { items, successUrl, cancelUrl } = params;
+
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => {
     const pkg = PACKAGES[item.packageType];
     return {
@@ -39,23 +38,31 @@ export async function createCheckoutSession({
     };
   });
 
+  const isGuest    = !params.userId;
+  const email      = isGuest ? params.guestEmail! : params.userEmail!;
+  const name       = isGuest ? params.guestName!  : params.userName!;
+
+  const metadata: Record<string, string> = {
+    items:     JSON.stringify(items),
+    buyerName: name,
+  };
+  if (params.userId) {
+    metadata.userId = params.userId;
+  } else {
+    metadata.guestEmail = params.guestEmail!;
+    metadata.guestName  = params.guestName!;
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode:               "payment",
     payment_method_types: ["card"],
     line_items:         lineItems,
-    customer_email:     userEmail,
+    customer_email:     email,
     success_url:        successUrl,
     cancel_url:         cancelUrl,
-    metadata: {
-      userId,
-      items: JSON.stringify(items),
-    },
+    metadata,
     payment_intent_data: process.env.STRIPE_CONNECTED_ACCOUNT_ID
-      ? {
-          transfer_data: {
-            destination: process.env.STRIPE_CONNECTED_ACCOUNT_ID,
-          },
-        }
+      ? { transfer_data: { destination: process.env.STRIPE_CONNECTED_ACCOUNT_ID } }
       : undefined,
   });
 

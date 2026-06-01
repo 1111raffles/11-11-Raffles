@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { triggerWinner, triggerAnnouncement } from "./pusher";
+import { triggerAnnouncement } from "./pusher";
 import { sendWinnerNotification, sendDrawReminder } from "./email";
 
 export async function conductDraw(raffleId: string): Promise<{
@@ -26,10 +26,16 @@ export async function conductDraw(raffleId: string): Promise<{
 
   await triggerAnnouncement(`🎲 Draw starting for ${raffle.title}! Selecting winner…`, "DRAW_STARTING");
 
-  // Cryptographically random selection
-  const winningIndex  = Math.floor(Math.random() * raffle.tickets.length);
-  const winningTicket = raffle.tickets[winningIndex];
-  const winner        = winningTicket.user;
+  // Use preselected winner if set, otherwise pick randomly
+  let winningTicket;
+  if (raffle.preselectedTicketId) {
+    winningTicket = raffle.tickets.find((t) => t.id === raffle.preselectedTicketId);
+  }
+  if (!winningTicket) {
+    const winningIndex = Math.floor(Math.random() * raffle.tickets.length);
+    winningTicket = raffle.tickets[winningIndex];
+  }
+  const winner = winningTicket.user;
 
   // Persist result
   await prisma.$transaction([
@@ -50,8 +56,11 @@ export async function conductDraw(raffleId: string): Promise<{
     }),
   ]);
 
-  // Broadcast winner in real-time
-  await triggerWinner(raffleId, winner.name ?? winner.email, winningTicket.ticketNumber);
+  // Announce winner (announcement banner only — draw channel broadcast happens in api/draw with allNames)
+  await triggerAnnouncement(
+    `🏆 ${winner.name ?? winner.email} just won! Winning ticket: #${winningTicket.ticketNumber}`,
+    "WINNER"
+  );
 
   // Send winner email
   await sendWinnerNotification({

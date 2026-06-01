@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: "Terms & Conditions" };
 const SECTIONS = [
   {
     title: "1. Introduction",
-    body: `These Terms and Conditions ("Terms") govern your use of Raffle Rumble ("the Service"), operated by [COMPANY NAME] ("we", "us", "our"), a company registered in England and Wales.
+    body: `These Terms and Conditions ("Terms") govern your use of Planet Raffle ("the Service"), operated by [COMPANY NAME] ("we", "us", "our"), a company registered in England and Wales.
 
 By creating an account and purchasing tickets, you agree to be bound by these Terms. Please read them carefully.`,
   },
@@ -80,7 +80,7 @@ Violation of these rules will result in immediate account suspension and forfeit
   },
   {
     title: "10. Intellectual Property",
-    body: `All content on Raffle Rumble, including text, graphics, logos, and software, is owned by or licensed to us and is protected by UK and international intellectual property laws. You may not reproduce, distribute, or create derivative works without our written permission.`,
+    body: `All content on Planet Raffle, including text, graphics, logos, and software, is owned by or licensed to us and is protected by UK and international intellectual property laws. You may not reproduce, distribute, or create derivative works without our written permission.`,
   },
   {
     title: "11. Limitation of Liability",
@@ -96,7 +96,7 @@ Our total liability to you shall not exceed the amount you paid for tickets in t
     title: "12. Data Protection",
     body: `We process your personal data in accordance with our Privacy Policy and the UK GDPR. Your data is used to manage your account, process payments, notify you of draw results, and improve our service.
 
-You have the right to access, correct, or delete your personal data. Contact us at privacy@rafflerumble.com to exercise your rights.`,
+You have the right to access, correct, or delete your personal data. Contact us at privacy@planetraffle.co.uk to exercise your rights.`,
   },
   {
     title: "13. Changes to Terms",
@@ -111,7 +111,7 @@ You have the right to access, correct, or delete your personal data. Contact us 
     body: `For questions about these Terms, contact us at:
 [COMPANY NAME]
 [Registered Address]
-Email: legal@rafflerumble.com`,
+Email: legal@planetraffle.co.uk`,
   },
 ];
 
@@ -121,6 +121,25 @@ export default function TermsPage() {
       <div className="mb-12">
         <h1 className="text-4xl font-black text-white">Terms &amp; Conditions</h1>
         <p className="mt-3 text-white/40">Last updated: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+
+        <div className="mt-8 rounded-2xl border border-gold-500/20 bg-gold-500/5 p-6">
+          <p className="text-sm leading-relaxed text-white/70">
+            Welcome to <span className="font-bold text-gold-400">Planet Raffle</span> — the UK&apos;s home for fair, transparent, and exciting prize raffles.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-white/70">
+            We believe everyone deserves a genuine shot at winning premium prizes without spending a fortune. That&apos;s why every raffle on our platform is independently managed, every draw is conducted fairly, and every winner is real.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-white/70">
+            These Terms &amp; Conditions exist to protect both you and us — so that every participant knows exactly what to expect, from the moment you purchase a ticket to the moment a winner is announced. We&apos;ve written them in plain language wherever possible, because we have nothing to hide.
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-white/70">
+            By using Planet Raffle, you&apos;re agreeing to play by the rules below. If you ever have a question or concern, our team is always reachable at{" "}
+            <a href="mailto:support@planetraffle.co.uk" className="text-gold-400 hover:underline">support@planetraffle.co.uk</a>.
+          </p>
+          <p className="mt-4 text-xs text-white/30 italic">
+            Please read these Terms carefully before purchasing tickets. Participation is open to UK residents aged 18 and over.
+          </p>
+        </div>
       </div>
 
       <div className="prose-sm flex flex-col gap-8">
@@ -133,7 +152,7 @@ export default function TermsPage() {
       </div>
 
       <div className="mt-12 rounded-2xl border border-white/5 bg-[#111] p-6 text-sm text-white/40">
-        <p>These Terms constitute the entire agreement between you and Raffle Rumble regarding your use of the service. If any provision is found unenforceable, the remaining provisions continue in full force.</p>
+        <p>These Terms constitute the entire agreement between you and Planet Raffle regarding your use of the service. If any provision is found unenforceable, the remaining provisions continue in full force.</p>
       </div>
     </div>
   );

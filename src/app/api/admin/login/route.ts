@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ ok: true });
     const opts     = adminCookieOptions(token);
 
+    // Clear any old cookies from previous versions
+    response.cookies.set({ name: "rr_admin_token", value: "", maxAge: 0, path: "/admin" });
+    response.cookies.set({ name: "rr_admin_token", value: "", maxAge: 0, path: "/" });
+    // Set new cookie
     response.cookies.set(opts);
     return response;
   } catch {

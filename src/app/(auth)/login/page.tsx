@@ -7,11 +7,11 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, UserCircle, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 
 const schema = z.object({
-  email:    z.string().email("Enter a valid email"),
+  email:    z.string().min(1, "Enter your email or name"),
   password: z.string().min(1, "Password required"),
 });
 type FormData = z.infer<typeof schema>;
@@ -29,27 +29,41 @@ export default function LoginPage() {
 
   async function onSubmit(data: FormData) {
     setLoading(true);
-    const res = await signIn("credentials", {
-      email:       data.email.toLowerCase(),
-      password:    data.password,
-      redirect:    false,
-      callbackUrl,
-    });
-    setLoading(false);
+    try {
+      // 1. Try admin credentials first
+      const adminRes = await fetch("/api/admin/login", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ username: data.email.trim(), password: data.password }),
+      });
 
-    if (res?.error) {
-      toast.error("Invalid email or password");
-    } else {
-      router.push(callbackUrl);
+      if (adminRes.ok) {
+        toast.success("Welcome back, Admin!");
+        router.push("/admin");
+        router.refresh();
+        return;
+      }
+
+      // 2. Try regular user login (email or name)
+      const res = await signIn("credentials", {
+        email:    data.email.trim(),
+        password: data.password,
+        redirect: false,
+        callbackUrl,
+      });
+
+      if (res?.error) {
+        toast.error("Invalid email, name or password");
+      } else {
+        router.push(callbackUrl);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleGoogle() {
     await signIn("google", { callbackUrl });
-  }
-
-  async function handleApple() {
-    await signIn("apple", { callbackUrl });
   }
 
   return (
@@ -58,14 +72,14 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-black">
-            <span className="text-gold-400">Raffle</span>
-            <span className="text-white">Rumble</span>
+            <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">Planet</span>
+            <span className="text-white"> Raffle</span>
           </Link>
           <h1 className="mt-4 text-2xl font-bold text-white">Welcome back</h1>
           <p className="mt-1 text-sm text-white/40">Sign in to your account</p>
         </div>
 
-        {/* Social */}
+        {/* Google */}
         <div className="flex flex-col gap-3">
           <button
             onClick={handleGoogle}
@@ -79,35 +93,25 @@ export default function LoginPage() {
             </svg>
             Continue with Google
           </button>
-
-          <button
-            onClick={handleApple}
-            className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            <svg className="h-5 w-5 fill-white" viewBox="0 0 24 24">
-              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
-            </svg>
-            Continue with Apple
-          </button>
         </div>
 
         <div className="my-6 flex items-center gap-4">
           <div className="h-px flex-1 bg-white/10" />
-          <span className="text-xs text-white/30">or continue with email</span>
+          <span className="text-xs text-white/30">or continue with email / name</span>
           <div className="h-px flex-1 bg-white/10" />
         </div>
 
-        {/* Email form */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-white/70">Email</label>
+            <label className="mb-1.5 block text-sm font-medium text-white/70">Email or Name</label>
             <div className="relative">
-              <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+              <UserCircle size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
               <input
                 {...register("email")}
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-white/20 outline-none transition focus:border-gold-500/50 focus:bg-white/8"
+                type="text"
+                autoComplete="username"
+                placeholder="you@example.com or your name"
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-white/20 outline-none transition focus:border-gold-500/50"
               />
             </div>
             {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
@@ -137,19 +141,21 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-gold mt-1 flex items-center justify-center gap-2 rounded-xl bg-gold-500 py-3 font-bold text-black transition hover:bg-gold-400 disabled:opacity-60"
+            className="btn-gold mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-60"
           >
-            {loading ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-            ) : "Sign In"}
+            {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : "Sign In"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-white/40">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-gold-400 transition hover:text-gold-300">
-            Sign up free
+        <div className="mt-4 text-center">
+          <Link href="/forgot-password" className="text-sm text-white/30 transition hover:text-white/60">
+            Forgot your password?
           </Link>
+        </div>
+
+        <p className="mt-4 text-center text-sm text-white/40">
+          Don&apos;t have an account?{" "}
+          <Link href="/signup" className="text-gold-400 transition hover:text-gold-300">Sign up free</Link>
         </p>
       </div>
     </div>

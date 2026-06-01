@@ -2,34 +2,39 @@
 
 import { useBasket } from "@/store/basket";
 import { PACKAGES } from "@/lib/packages";
-import { X, Minus, Plus, ShoppingBasket, ArrowRight, Trash2 } from "lucide-react";
+import { X, Minus, Plus, ShoppingBasket, ArrowRight, Trash2, Mail, User, LogIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import Image from "next/image";
+import Link from "next/link";
 
 export function Basket() {
   const { items, isOpen, closeBasket, removeItem, updateQty, clearBasket, totalTickets, totalPrice } = useBasket();
   const { data: session } = useSession();
   const router            = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [showGuest, setShowGuest]   = useState(false);
+  const [guestName, setGuestName]   = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
 
-  async function handleCheckout() {
-    if (!session) {
-      closeBasket();
-      router.push("/login?callbackUrl=/basket");
-      return;
-    }
+  async function doCheckout(guest?: { name: string; email: string }) {
     if (items.length === 0) return;
-
     setLoading(true);
     try {
+      const body: Record<string, unknown> = {
+        items: items.map((i) => ({ raffleId: i.raffleId, packageType: i.packageType, quantity: i.quantity })),
+      };
+      if (guest) {
+        body.guestName  = guest.name;
+        body.guestEmail = guest.email;
+      }
+
       const res  = await fetch("/api/checkout", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ items: items.map((i) => ({ raffleId: i.raffleId, packageType: i.packageType, quantity: i.quantity })) }),
+        body:    JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
@@ -39,6 +44,23 @@ export function Basket() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleCheckout() {
+    if (!session) {
+      setShowGuest(true);
+      return;
+    }
+    await doCheckout();
+  }
+
+  async function handleGuestSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const name  = guestName.trim();
+    const email = guestEmail.trim().toLowerCase();
+    if (!name || name.length < 2) { toast.error("Enter your display name (min 2 characters)"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast.error("Enter a valid email address"); return; }
+    await doCheckout({ name, email });
   }
 
   return (
@@ -68,15 +90,134 @@ export function Basket() {
                 <ShoppingBasket size={20} className="text-gold-400" />
                 <h2 className="text-lg font-bold">Your Basket</h2>
                 {items.length > 0 && (
-                  <span className="rounded-full bg-gold-500 px-2 py-0.5 text-xs font-black text-black">
+                  <span className="rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-2 py-0.5 text-xs font-black text-white">
                     {items.reduce((s, i) => s + i.quantity, 0)}
                   </span>
                 )}
               </div>
-              <button onClick={closeBasket} className="rounded-lg p-2 text-white/50 transition hover:bg-white/5 hover:text-white">
+              <button
+                onClick={() => { closeBasket(); setShowGuest(false); }}
+                className="rounded-lg p-2 text-white/50 transition hover:bg-white/5 hover:text-white"
+              >
                 <X size={18} />
               </button>
             </div>
+
+            {/* Guest form overlay */}
+            <AnimatePresence>
+              {showGuest && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="absolute inset-0 z-10 flex flex-col bg-[#0d0d0d]"
+                >
+                  {/* Guest header */}
+                  <div className="flex items-center justify-between border-b border-white/5 px-6 py-5">
+                    <h2 className="text-lg font-bold text-white">Quick Checkout</h2>
+                    <button
+                      onClick={() => setShowGuest(false)}
+                      className="rounded-lg p-2 text-white/50 transition hover:bg-white/5 hover:text-white"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto px-6 py-6">
+                    {/* Sign in option */}
+                    <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                      <p className="mb-1 text-sm font-semibold text-white">Have an account?</p>
+                      <p className="mb-3 text-xs text-white/40">Sign in to track all your tickets and entries</p>
+                      <Link
+                        href="/login"
+                        onClick={closeBasket}
+                        className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                      >
+                        <LogIn size={15} />
+                        Sign In
+                      </Link>
+                    </div>
+
+                    <div className="mb-6 flex items-center gap-3">
+                      <div className="h-px flex-1 bg-white/10" />
+                      <span className="text-xs font-semibold uppercase tracking-widest text-white/30">or continue as guest</span>
+                      <div className="h-px flex-1 bg-white/10" />
+                    </div>
+
+                    <form onSubmit={handleGuestSubmit} className="flex flex-col gap-4">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium text-white/60">
+                          Display Name
+                          <span className="ml-1.5 text-xs text-white/30">(shown on your tickets)</span>
+                        </label>
+                        <div className="relative">
+                          <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                          <input
+                            type="text"
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                            placeholder="e.g. John S"
+                            maxLength={40}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-white/20 outline-none transition focus:border-gold-500/50"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium text-white/60">
+                          Email Address
+                          <span className="ml-1.5 text-xs text-white/30">(for ticket confirmation)</span>
+                        </label>
+                        <div className="relative">
+                          <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                          <input
+                            type="email"
+                            value={guestEmail}
+                            onChange={(e) => setGuestEmail(e.target.value)}
+                            placeholder="you@example.com"
+                            className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-white/20 outline-none transition focus:border-gold-500/50"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Order summary */}
+                      <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                        <div className="flex justify-between text-sm text-white/50">
+                          <span>Total tickets</span>
+                          <span className="font-semibold text-white">{totalTickets()} 🎟️</span>
+                        </div>
+                        <div className="mt-1 flex justify-between text-sm">
+                          <span className="font-semibold text-white">Total</span>
+                          <span className="font-black text-gold-400">£{(totalPrice() / 100).toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 py-4 text-base font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                      >
+                        {loading ? (
+                          <span className="flex items-center gap-2">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            Processing…
+                          </span>
+                        ) : (
+                          <>
+                            Continue to Payment
+                            <ArrowRight size={18} />
+                          </>
+                        )}
+                      </button>
+
+                      <p className="text-center text-xs text-white/30">
+                        Apple Pay · Google Pay · Card accepted
+                      </p>
+                    </form>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Items */}
             <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -87,7 +228,7 @@ export function Basket() {
                     <p className="font-semibold text-white/50">Your basket is empty</p>
                     <p className="mt-1 text-sm text-white/30">Add tickets to a raffle to get started</p>
                   </div>
-                  <button onClick={closeBasket} className="rounded-xl bg-gold-500 px-6 py-2.5 text-sm font-bold text-black transition hover:bg-gold-400">
+                  <button onClick={closeBasket} className="rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90">
                     Browse Raffles
                   </button>
                 </div>
@@ -166,11 +307,11 @@ export function Basket() {
                 <button
                   onClick={handleCheckout}
                   disabled={loading}
-                  className="btn-gold flex w-full items-center justify-center gap-2 rounded-xl bg-gold-500 py-4 text-base font-bold text-black transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-gold flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 py-4 text-base font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                       Processing…
                     </span>
                   ) : (

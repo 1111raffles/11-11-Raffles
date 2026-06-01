@@ -1,7 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import AppleProvider from "next-auth/providers/apple";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
@@ -19,17 +18,27 @@ export const authOptions: NextAuthOptions = {
 
   providers: [
     CredentialsProvider({
-      name: "Email & Password",
+      name: "Email or Username",
       credentials: {
-        email:    { label: "Email",    type: "email"    },
-        password: { label: "Password", type: "password" },
+        email:    { label: "Email or Username", type: "text"     },
+        password: { label: "Password",          type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+        const identifier = credentials.email.trim();
+
+        // Try email first, then fall back to name lookup
+        let user = await prisma.user.findUnique({
+          where: { email: identifier.toLowerCase() },
         });
+
+        if (!user) {
+          // Look up by name (case-insensitive)
+          user = await prisma.user.findFirst({
+            where: { name: { equals: identifier, mode: "insensitive" } },
+          });
+        }
 
         if (!user?.passwordHash) return null;
 
@@ -43,16 +52,6 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId:     process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-
-    AppleProvider({
-      clientId:     process.env.APPLE_ID!,
-      clientSecret: {
-        appleId:    process.env.APPLE_ID!,
-        teamId:     process.env.APPLE_TEAM_ID!,
-        privateKey: (process.env.APPLE_PRIVATE_KEY ?? "").replace(/\\n/g, "\n"),
-        keyId:      process.env.APPLE_KEY_ID!,
-      } as unknown as string,
     }),
   ],
 

@@ -54,7 +54,7 @@ export default function CheckoutSuccessPage() {
           </Link>
           <Link
             href="/"
-            className="btn-gold flex flex-1 items-center justify-center gap-2 rounded-xl bg-gold-500 py-3 text-sm font-bold text-black transition hover:bg-gold-400"
+            className="btn-gold flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 py-3 text-sm font-bold text-white transition hover:opacity-90"
           >
             Browse More Raffles
             <ArrowRight size={16} />

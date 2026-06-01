@@ -82,7 +82,7 @@ export function LiveDraw({ raffleId }: { raffleId: string }) {
               <p className="mt-1 text-sm text-white/50">Ticket #{state.winnerTicket}</p>
               <button
                 onClick={() => setState({ status: "idle", countdown: 0 })}
-                className="mt-6 rounded-xl bg-gold-500 px-8 py-3 font-bold text-black transition hover:bg-gold-400"
+                className="mt-6 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 px-8 py-3 font-bold text-white transition hover:opacity-90"
               >
                 Close
               </button>

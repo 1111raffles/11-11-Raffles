@@ -11,7 +11,8 @@ const schema = z.object({
   title:        z.string().min(3),
   description:  z.string().min(10),
   imageUrl:     z.string().url("Enter a valid URL").or(z.literal("")),
-  totalTickets: z.coerce.number().int().min(10).max(100000),
+  totalTickets: z.coerce.number().int().min(1).max(100000),
+  soldTickets:  z.coerce.number().int().min(0).max(100000),
   ticketPrice:  z.coerce.number().min(0.5).max(100),
   drawTime:     z.string().min(1, "Select a draw time"),
   status:       z.enum(["DRAFT", "ACTIVE", "CANCELLED"]),
@@ -25,8 +26,8 @@ interface Props {
 const FIELD = "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/20 outline-none transition focus:border-gold-500/40";
 
 export function RaffleForm({ raffle }: Props) {
-  const router  = useRouter();
-  const isEdit  = !!raffle?.id;
+  const router    = useRouter();
+  const isEdit    = !!raffle?.id;
   const [loading, setLoading] = useState(false);
 
   const defaultDrawTime = (() => {
@@ -36,20 +37,31 @@ export function RaffleForm({ raffle }: Props) {
     return d.toISOString().slice(0, 16);
   })();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: raffle ?? {
       title:        "",
       description:  "",
       imageUrl:     "",
       totalTickets: 1000,
+      soldTickets:  0,
       ticketPrice:  1,
       drawTime:     defaultDrawTime,
       status:       "DRAFT",
     },
   });
 
+  const totalTickets = watch("totalTickets") || 0;
+  const soldTickets  = watch("soldTickets")  || 0;
+  const remaining    = Math.max(0, totalTickets - soldTickets);
+  const soldPct      = totalTickets > 0 ? Math.min(100, (soldTickets / totalTickets) * 100) : 0;
+
   async function onSubmit(data: FormData) {
+    // Validate sold <= total
+    if (data.soldTickets > data.totalTickets) {
+      toast.error("Sold tickets can't exceed total tickets");
+      return;
+    }
     setLoading(true);
     try {
       const url    = isEdit ? `/api/admin/raffles/${raffle!.id}` : "/api/admin/raffles";
@@ -74,9 +86,16 @@ export function RaffleForm({ raffle }: Props) {
     if (!isEdit || !confirm(`Delete "${raffle!.title}"? This cannot be undone.`)) return;
     setLoading(true);
     try {
-      await fetch(`/api/admin/raffles/${raffle!.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/raffles/${raffle!.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Delete failed");
+        return;
+      }
       toast.success("Raffle deleted");
       router.push("/admin/raffles");
+    } catch {
+      toast.error("Network error — delete failed");
     } finally {
       setLoading(false);
     }
@@ -105,40 +124,69 @@ export function RaffleForm({ raffle }: Props) {
           {errors.imageUrl && <p className="mt-1 text-xs text-red-400">{errors.imageUrl.message}</p>}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-white/60">Total Tickets</label>
-            <input {...register("totalTickets")} type="number" min="10" className={FIELD} />
-            {errors.totalTickets && <p className="mt-1 text-xs text-red-400">{errors.totalTickets.message}</p>}
+        {/* Ticket counts */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+          <p className="mb-3 text-sm font-semibold text-white/60">Ticket Counts</p>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-white/60">Total Tickets Available</label>
+              <input {...register("totalTickets")} type="number" min="1" className={FIELD} />
+              {errors.totalTickets && <p className="mt-1 text-xs text-red-400">{errors.totalTickets.message}</p>}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-white/60">
+                Tickets Sold
+                <span className="ml-2 text-xs text-white/30">(shown on site)</span>
+              </label>
+              <input {...register("soldTickets")} type="number" min="0" className={FIELD} />
+              {errors.soldTickets && <p className="mt-1 text-xs text-red-400">{errors.soldTickets.message}</p>}
+            </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-white/60">Ticket Price (£)</label>
-            <input {...register("ticketPrice")} type="number" min="0.5" step="0.50" className={FIELD} />
-            {errors.ticketPrice && <p className="mt-1 text-xs text-red-400">{errors.ticketPrice.message}</p>}
+
+          {/* Live preview */}
+          <div className="mt-4">
+            <div className="mb-1.5 flex justify-between text-xs text-white/40">
+              <span>{soldTickets.toLocaleString()} sold</span>
+              <span>{remaining.toLocaleString()} remaining</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-gold-500 to-gold-600 transition-all"
+                style={{ width: `${soldPct}%` }}
+              />
+            </div>
+            <p className="mt-1.5 text-right text-xs text-white/30">{soldPct.toFixed(1)}% sold</p>
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
+            <label className="mb-1.5 block text-sm font-medium text-white/60">Ticket Price (£)</label>
+            <input {...register("ticketPrice")} type="number" min="0.5" step="0.50" className={FIELD} />
+            {errors.ticketPrice && <p className="mt-1 text-xs text-red-400">{errors.ticketPrice.message}</p>}
+          </div>
+          <div>
             <label className="mb-1.5 block text-sm font-medium text-white/60">Draw Time</label>
             <input {...register("drawTime")} type="datetime-local" className={FIELD} />
             {errors.drawTime && <p className="mt-1 text-xs text-red-400">{errors.drawTime.message}</p>}
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-white/60">Status</label>
-            <select {...register("status")} className={`${FIELD} cursor-pointer`}>
-              <option value="DRAFT">Draft</option>
-              <option value="ACTIVE">Active</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-white/60">Status</label>
+          <select {...register("status")} className={`${FIELD} cursor-pointer`}>
+            <option value="DRAFT">Draft — hidden from public</option>
+            <option value="ACTIVE">Active — live on site</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
         </div>
 
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-xl bg-gold-500 py-3 font-bold text-black transition hover:bg-gold-400 disabled:opacity-50"
+            className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
           >
             {loading ? "Saving…" : isEdit ? "Save Changes" : "Create Raffle"}
           </button>

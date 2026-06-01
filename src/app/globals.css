@@ -4,6 +4,9 @@
 
 :root {
   --font-inter: "Inter", system-ui, sans-serif;
+  --color-primary:   #8b5cf6;
+  --color-secondary: #3b82f6;
+  --color-accent:    #a78bfa;
 }
 
 * {
@@ -26,17 +29,17 @@ body {
 /* Custom scrollbar */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a0a; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
+::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid #f59e0b;
+  outline: 2px solid #8b5cf6;
   outline-offset: 2px;
 }
 
-/* Gold text utility */
-.text-gold { color: #f59e0b; }
+/* Brand text utility */
+.text-gold { color: #a78bfa; }
 
 /* Glass card */
 .glass {
@@ -85,24 +88,25 @@ body {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Gold glow on hover for CTAs */
+/* Purple/blue gradient button */
 .btn-gold {
   position: relative;
   overflow: hidden;
   transition: all 0.2s ease;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
 }
 
 .btn-gold::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
   opacity: 0;
   transition: opacity 0.2s;
 }
 
 .btn-gold:hover::after { opacity: 1; }
-.btn-gold:hover        { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+.btn-gold:hover        { box-shadow: 0 0 24px rgba(139, 92, 246, 0.5), 0 0 48px rgba(59, 130, 246, 0.3); }
 .btn-gold:active       { transform: scale(0.98); }
 
 /* Card hover */
@@ -112,7 +116,7 @@ body {
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  border-color: rgba(245, 158, 11, 0.2);
+  border-color: rgba(139, 92, 246, 0.3);
 }
 
 /* Skeleton loading */
@@ -134,8 +138,16 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* Progress bar */
+/* Progress bar — purple to blue gradient */
 .progress-bar {
-  background: linear-gradient(90deg, #f59e0b, #d97706);
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
   transition: width 0.5s ease;
+}
+
+/* Brand gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

@@ -57,7 +57,7 @@ const FAQS = [
       },
       {
         q: "Can prizes be delivered outside the UK?",
-        a: "Currently Raffle Rumble is available to UK residents only. Prizes are shipped to UK addresses only.",
+        a: "Currently Planet Raffle is available to UK residents only. Prizes are shipped to UK addresses only.",
       },
       {
         q: "Can I take a cash alternative?",
@@ -136,7 +136,7 @@ export default function FAQPage() {
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
       <div className="mb-12 text-center">
         <h1 className="text-4xl font-black text-white">Frequently Asked Questions</h1>
-        <p className="mt-3 text-white/40">Everything you need to know about Raffle Rumble.</p>
+        <p className="mt-3 text-white/40">Everything you need to know about Planet Raffle.</p>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -156,8 +156,8 @@ export default function FAQPage() {
         <p className="font-semibold text-white">Still have questions?</p>
         <p className="mt-1 text-sm text-white/50">
           Email us at{" "}
-          <a href="mailto:support@rafflerumble.com" className="text-gold-400 underline">
-            support@rafflerumble.com
+          <a href="mailto:support@planetraffle.co.uk" className="text-gold-400 underline">
+            support@planetraffle.co.uk
           </a>
         </p>
       </div>

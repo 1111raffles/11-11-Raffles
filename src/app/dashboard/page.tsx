@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Trophy, Ticket, TrendingUp, Clock, CheckCircle2, Circle } from "lucide-react";
 import Link from "next/link";
+import { DeleteAccountButton } from "@/components/DeleteAccountButton";
 
 async function getUserData(userId: string) {
   const [tickets, orders, wins] = await Promise.all([
@@ -55,7 +56,7 @@ export default async function DashboardPage() {
           </h1>
           <p className="mt-1 text-white/40">Here&apos;s your raffle activity</p>
         </div>
-        <Link href="/" className="btn-gold rounded-xl bg-gold-500 px-4 py-2 text-sm font-bold text-black transition hover:bg-gold-400">
+        <Link href="/" className="btn-gold rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-2 text-sm font-bold text-white transition hover:opacity-90">
           Browse Raffles
         </Link>
       </div>
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
         {[
           { label: "Total tickets",    value: tickets.length,                         icon: <Ticket size={18} className="text-gold-400" /> },
           { label: "Active entries",   value: activeRaffles,                           icon: <TrendingUp size={18} className="text-blue-400" /> },
-          { label: "Raffles won",      value: wins,                                    icon: <Trophy size={18} className="text-yellow-400" /> },
+          { label: "Raffles won",      value: wins,                                    icon: <Trophy size={18} className="text-violet-400" /> },
           { label: "Total spent",      value: `£${(totalSpent / 100).toFixed(2)}`,    icon: <Clock size={18} className="text-purple-400" /> },
         ].map(({ label, value, icon }) => (
           <div key={label} className="rounded-2xl border border-white/5 bg-[#111] p-5">
@@ -127,7 +128,7 @@ export default async function DashboardPage() {
                             key={t.id}
                             className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
                               t.isWinner
-                                ? "bg-gold-500 text-black"
+                                ? "bg-gradient-to-r from-violet-600 to-blue-500 text-white"
                                 : "bg-white/5 text-white/60"
                             }`}
                           >
@@ -163,7 +164,7 @@ export default async function DashboardPage() {
           <Ticket size={48} className="mb-4 text-white/10" />
           <p className="font-semibold text-white/50">No tickets yet</p>
           <p className="mt-1 text-sm text-white/30">Browse raffles and buy your first ticket for just £1</p>
-          <Link href="/" className="mt-6 rounded-xl bg-gold-500 px-6 py-2.5 text-sm font-bold text-black transition hover:bg-gold-400">
+          <Link href="/" className="mt-6 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 px-6 py-2.5 text-sm font-bold text-white transition hover:opacity-90">
             View Live Raffles
           </Link>
         </div>
@@ -189,6 +190,22 @@ export default async function DashboardPage() {
           </div>
         </section>
       )}
+
+      {/* Account settings */}
+      <section className="mt-10">
+        <h2 className="mb-4 text-lg font-bold text-white">Account Settings</h2>
+        <div className="rounded-2xl border border-white/5 bg-[#111] p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-white">Delete Account</h3>
+              <p className="mt-1 text-sm text-white/40">
+                Permanently delete your account and all associated data including tickets, order history, and personal information. This cannot be undone.
+              </p>
+            </div>
+            <DeleteAccountButton />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

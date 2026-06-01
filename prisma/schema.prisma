@@ -22,10 +22,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-  tickets  Ticket[]
-  orders   Order[]
+  accounts       Account[]
+  sessions       Session[]
+  tickets        Ticket[]
+  orders         Order[]
+  passwordResets PasswordReset[]
 
   @@map("users")
 }
@@ -82,8 +83,10 @@ model Raffle {
   ticketPrice     Float    @default(1.0)
   drawTime        DateTime
   status          String   @default("ACTIVE")
-  winnerId        String?
-  winnerTicketNum Int?
+  winnerId           String?
+  winnerTicketNum    Int?
+  preselectedUserId  String?
+  preselectedTicketId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -133,6 +136,19 @@ model Order {
   tickets Ticket[]
 
   @@map("orders")
+}
+
+// ── Password Resets ───────────────────────────────────────────────────────────
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
 }
 
 // ── Announcements ─────────────────────────────────────────────────────────────

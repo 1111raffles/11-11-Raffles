@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
 const SECRET       = process.env.ADMIN_JWT_SECRET!;
-const COOKIE_NAME  = "rr_admin_token";
+const COOKIE_NAME  = "admin_session_v2";
 const COOKIE_MAX   = 60 * 60 * 8; // 8 hours
 
 function sha256(input: string): string {
@@ -60,6 +60,6 @@ export function adminCookieOptions(token: string) {
     secure:   process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     maxAge:   COOKIE_MAX,
-    path:     "/admin",
+    path:     "/",
   };
 }

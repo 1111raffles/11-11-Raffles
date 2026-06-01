@@ -53,10 +53,10 @@ export function DrawPanel({ raffleId, raffleName }: Props) {
       <button
         onClick={conductDraw}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-xl bg-gold-500 py-3 font-bold text-black transition hover:bg-gold-400 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
       >
         {loading ? (
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : (
           <>
             <PlayCircle size={20} />

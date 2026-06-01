@@ -9,17 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Renamed to "gold" to avoid changing all class names — now purple/blue
         gold: {
-          50:  "#fffbeb",
-          100: "#fef3c7",
-          200: "#fde68a",
-          300: "#fcd34d",
-          400: "#fbbf24",
-          500: "#f59e0b",
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
+          50:  "#f5f3ff",
+          100: "#ede9fe",
+          200: "#ddd6fe",
+          300: "#c4b5fd",
+          400: "#a78bfa",   // light purple — used for text accents
+          500: "#8b5cf6",   // main purple — used for buttons
+          600: "#7c3aed",   // deep purple — hover states
+          700: "#6d28d9",
+          800: "#5b21b6",
+          900: "#4c1d95",
+        },
+        // Blue accent for gradients / secondary elements
+        brand: {
+          blue:   "#3b82f6",
+          purple: "#8b5cf6",
+          light:  "#a78bfa",
+          dark:   "#6d28d9",
         },
         surface: {
           50:  "#1a1a1a",
@@ -55,8 +63,8 @@ const config: Config = {
           "100%": { transform: "translateX(-50%)" },
         },
         glow: {
-          "0%":   { boxShadow: "0 0 5px #f59e0b, 0 0 10px #f59e0b" },
-          "100%": { boxShadow: "0 0 20px #f59e0b, 0 0 40px #f59e0b, 0 0 60px #f59e0b" },
+          "0%":   { boxShadow: "0 0 5px #8b5cf6, 0 0 10px #3b82f6" },
+          "100%": { boxShadow: "0 0 20px #8b5cf6, 0 0 40px #3b82f6, 0 0 60px #8b5cf6" },
         },
         countFlip: {
           "0%":   { transform: "rotateX(90deg)", opacity: "0" },
@@ -64,10 +72,11 @@ const config: Config = {
         },
       },
       backgroundImage: {
-        "gold-gradient":  "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        "gold-gradient":  "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
         "dark-gradient":  "linear-gradient(180deg, #0a0a0a 0%, #111111 100%)",
         "card-gradient":  "linear-gradient(145deg, #1a1a1a 0%, #111111 100%)",
         "hero-gradient":  "linear-gradient(180deg, transparent 0%, #0a0a0a 100%)",
+        "brand-gradient": "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
       },
     },
   },

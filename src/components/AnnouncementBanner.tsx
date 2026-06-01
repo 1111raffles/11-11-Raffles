@@ -10,24 +10,20 @@ interface BannerItem {
 }
 
 export function AnnouncementBanner() {
-  const [messages, setMessages] = useState<BannerItem[]>([
-    { id: "a1", message: "🎉 James T. from London just won a PlayStation 5! Ticket #742" },
-    { id: "a2", message: "🔥 New raffle live: MacBook Pro 16\" M4 — 1,000 tickets from £1" },
-    { id: "a3", message: "🏆 Sarah M. from Manchester won an iPhone 16 Pro! Ticket #231" },
-    { id: "a4", message: "✨ Draw tonight at 11:11 PM — buy your tickets now!" },
-    { id: "a5", message: "💰 500 tickets sold in the last hour — hurry!" },
-  ]);
+  const [messages, setMessages] = useState<BannerItem[]>([]);
+  const [ready,    setReady]    = useState(false);
 
   useEffect(() => {
-    // Fetch initial announcements
-    fetch("/api/announcements?limit=8")
+    // Fetch real announcements from DB only
+    fetch("/api/announcements?limit=10")
       .then((r) => r.json())
       .then((data: AnnouncementPublic[]) => {
-        if (data?.length) {
+        if (Array.isArray(data)) {
           setMessages(data.map((a) => ({ id: a.id, message: a.message })));
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setReady(true));
 
     // Subscribe to real-time announcements
     try {
@@ -43,22 +39,22 @@ export function AnnouncementBanner() {
 
       return () => { pusher.unsubscribe(CHANNELS.ANNOUNCEMENTS); };
     } catch {
-      // Pusher not configured — live updates unavailable
+      // Pusher not configured
     }
   }, []);
 
-  const doubled = [...messages, ...messages]; // Seamless loop
+  // Don't render banner until we've loaded real data
+  if (!ready || messages.length === 0) return null;
+
+  const doubled = [...messages, ...messages];
 
   return (
     <div className="relative z-50 overflow-hidden border-b border-gold-500/20 bg-gold-500/5 py-2">
       <div className="flex items-center">
-        {/* Live badge */}
         <div className="flex shrink-0 items-center gap-2 border-r border-white/10 px-4">
           <span className="pulse-dot" />
           <span className="text-xs font-bold uppercase tracking-widest text-gold-400">Live</span>
         </div>
-
-        {/* Ticker */}
         <div className="ticker-wrap flex-1">
           <div className="ticker-track">
             {doubled.map((msg, i) => (

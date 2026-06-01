@@ -1,7 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { useBasket } from "@/store/basket";
 import { PACKAGES, PackageType } from "@/lib/packages";
 import { Ticket, Zap, Crown } from "lucide-react";
@@ -21,15 +19,9 @@ interface Props {
 }
 
 export function PurchasePackages({ raffleId, raffleName, disabled }: Props) {
-  const { data: session } = useSession();
-  const router            = useRouter();
-  const { addItem }       = useBasket();
+  const { addItem } = useBasket();
 
   function handleAdd(packageType: PackageType) {
-    if (!session) {
-      router.push("/login?callbackUrl=/");
-      return;
-    }
     addItem({ raffleId, raffleName, packageType });
     const pkg = PACKAGES[packageType];
     toast.success(
@@ -57,7 +49,7 @@ export function PurchasePackages({ raffleId, raffleName, disabled }: Props) {
           className={`card-hover relative flex flex-col items-center gap-3 rounded-2xl border bg-[#111] p-5 text-center transition-colors ${meta.color} disabled:cursor-not-allowed disabled:opacity-40`}
         >
           {meta.popular && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold-500 px-3 py-0.5 text-[11px] font-black uppercase tracking-wide text-black">
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-violet-600 to-blue-500 px-3 py-0.5 text-[11px] font-black uppercase tracking-wide text-white">
               Best Value
             </span>
           )}
@@ -90,7 +82,7 @@ export function PurchasePackages({ raffleId, raffleName, disabled }: Props) {
             </div>
           </div>
 
-          <div className={`w-full rounded-xl py-2.5 text-sm font-bold transition ${meta.popular ? "bg-gold-500 text-black hover:bg-gold-400" : "bg-white/10 text-white hover:bg-white/15"}`}>
+          <div className={`w-full rounded-xl py-2.5 text-sm font-bold transition ${meta.popular ? "bg-gradient-to-r from-violet-600 to-blue-500 text-white hover:opacity-90" : "bg-white/10 text-white hover:bg-white/15"}`}>
             Add to Basket
           </div>
         </motion.button>
