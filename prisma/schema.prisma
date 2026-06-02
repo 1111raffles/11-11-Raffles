@@ -1,6 +1,3 @@
-// Raffle Rumble — Prisma Schema
-// Development: SQLite  |  Production: switch provider to "postgresql"
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,22 +8,20 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ── Users ─────────────────────────────────────────────────────────────────────
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
+  id             String          @id @default(cuid())
+  name           String?
+  email          String          @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   accounts       Account[]
-  sessions       Session[]
-  tickets        Ticket[]
   orders         Order[]
   passwordResets PasswordReset[]
+  sessions       Session[]
+  tickets        Ticket[]
 
   @@map("users")
 }
@@ -44,8 +39,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -56,8 +50,7 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
 }
@@ -71,32 +64,28 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// ── Raffles ───────────────────────────────────────────────────────────────────
-// status: DRAFT | ACTIVE | DRAWING | COMPLETED | CANCELLED
 model Raffle {
-  id              String   @id @default(cuid())
-  title           String
-  description     String
-  imageUrl        String?
-  totalTickets    Int      @default(1000)
-  soldTickets     Int      @default(0)
-  ticketPrice     Float    @default(1.0)
-  drawTime        DateTime
-  status          String   @default("ACTIVE")
-  winnerId           String?
-  winnerTicketNum    Int?
-  preselectedUserId  String?
+  id                  String         @id @default(cuid())
+  title               String
+  description         String
+  imageUrl            String?
+  totalTickets        Int            @default(1000)
+  soldTickets         Int            @default(0)
+  ticketPrice         Float          @default(1.0)
+  drawTime            DateTime
+  status              String         @default("ACTIVE")
+  winnerId            String?
+  winnerTicketNum     Int?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
   preselectedTicketId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  tickets       Ticket[]
-  announcements Announcement[]
+  preselectedUserId   String?
+  announcements       Announcement[]
+  tickets             Ticket[]
 
   @@map("raffles")
 }
 
-// ── Tickets ───────────────────────────────────────────────────────────────────
 model Ticket {
   id           String   @id @default(cuid())
   ticketNumber Int
@@ -105,18 +94,14 @@ model Ticket {
   orderId      String
   isWinner     Boolean  @default(false)
   createdAt    DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  raffle Raffle @relation(fields: [raffleId], references: [id])
-  order  Order  @relation(fields: [orderId], references: [id])
+  order        Order    @relation(fields: [orderId], references: [id])
+  raffle       Raffle   @relation(fields: [raffleId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
 
   @@unique([raffleId, ticketNumber])
   @@map("tickets")
 }
 
-// ── Orders ────────────────────────────────────────────────────────────────────
-// packageType: SINGLE | FIVE_PLUS | TEN_PLUS
-// status: PENDING | PAID | FAILED | REFUNDED
 model Order {
   id                    String   @id @default(cuid())
   userId                String
@@ -131,36 +116,30 @@ model Order {
   status                String   @default("PENDING")
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-
-  user    User     @relation(fields: [userId], references: [id])
-  tickets Ticket[]
+  user                  User     @relation(fields: [userId], references: [id])
+  tickets               Ticket[]
 
   @@map("orders")
 }
 
-// ── Password Resets ───────────────────────────────────────────────────────────
 model PasswordReset {
   id        String   @id @default(cuid())
   userId    String
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("password_resets")
 }
 
-// ── Announcements ─────────────────────────────────────────────────────────────
-// type: WINNER | DRAW_STARTING | NEW_RAFFLE | MILESTONE | GENERAL
 model Announcement {
   id        String   @id @default(cuid())
   raffleId  String?
   type      String
   message   String
   createdAt DateTime @default(now())
-
-  raffle Raffle? @relation(fields: [raffleId], references: [id])
+  raffle    Raffle?  @relation(fields: [raffleId], references: [id])
 
   @@map("announcements")
 }

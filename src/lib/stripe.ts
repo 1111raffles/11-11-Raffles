@@ -2,9 +2,9 @@
 // For pricing constants use @/lib/packages instead.
 
 import Stripe from "stripe";
-import { PACKAGES, type PackageType } from "./packages";
+import { getPackages, type PackageType } from "./packages";
 
-export { PACKAGES, type PackageType } from "./packages";
+export { getPackages, type PackageType } from "./packages";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-02-24.acacia",
@@ -13,6 +13,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 type CheckoutParams = {
   items:      Array<{ raffleId: string; packageType: PackageType; quantity: number }>;
+  priceMap:   Record<string, number>; // raffleId -> ticketPrice in £
   successUrl: string;
   cancelUrl:  string;
 } & (
@@ -21,10 +22,11 @@ type CheckoutParams = {
 );
 
 export async function createCheckoutSession(params: CheckoutParams) {
-  const { items, successUrl, cancelUrl } = params;
+  const { items, priceMap, successUrl, cancelUrl } = params;
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => {
-    const pkg = PACKAGES[item.packageType];
+    const ticketPrice = priceMap[item.raffleId] ?? 1.0;
+    const pkg         = getPackages(ticketPrice)[item.packageType];
     return {
       quantity: item.quantity,
       price_data: {

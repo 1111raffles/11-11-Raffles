@@ -1,7 +1,7 @@
 "use client";
 
 import { useBasket } from "@/store/basket";
-import { PACKAGES, PackageType } from "@/lib/packages";
+import { getPackages, PackageType } from "@/lib/packages";
 import { Ticket, Zap, Crown } from "lucide-react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -13,13 +13,15 @@ const PACKAGE_META: Record<PackageType, { icon: React.ReactNode; color: string; 
 };
 
 interface Props {
-  raffleId:   string;
-  raffleName: string;
-  disabled?:  boolean;
+  raffleId:    string;
+  raffleName:  string;
+  ticketPrice: number; // in £
+  disabled?:   boolean;
 }
 
-export function PurchasePackages({ raffleId, raffleName, disabled }: Props) {
+export function PurchasePackages({ raffleId, raffleName, ticketPrice, disabled }: Props) {
   const { addItem } = useBasket();
+  const PACKAGES = getPackages(ticketPrice);
 
   function handleAdd(packageType: PackageType) {
     addItem({ raffleId, raffleName, packageType });
@@ -60,7 +62,7 @@ export function PurchasePackages({ raffleId, raffleName, disabled }: Props) {
 
           <div>
             <div className="text-2xl font-black text-white">
-              £{(pkg.price / 100).toFixed(0)}
+              £{(pkg.price / 100).toFixed(2).replace(/\.00$/, "")}
             </div>
             <div className="mt-0.5 text-sm text-white/50">{pkg.label}</div>
           </div>

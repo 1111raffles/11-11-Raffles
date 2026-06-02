@@ -119,6 +119,7 @@ export default async function HomePage() {
                 <PurchasePackages
                   raffleId={featured.id}
                   raffleName={featured.title}
+                  ticketPrice={featured.ticketPrice}
                   disabled={featured.status !== "ACTIVE"}
                 />
               </div>

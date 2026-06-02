@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createCheckoutSession } from "@/lib/stripe";
+import { prisma } from "@/lib/prisma";
 import type { PackageType } from "@/lib/packages";
 import { z } from "zod";
 
@@ -26,8 +27,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
+    // Fetch ticket prices for all raffles in the basket
+    const raffleIds = Array.from(new Set(parsed.data.items.map((i) => i.raffleId)));
+    const raffles   = await prisma.raffle.findMany({
+      where: { id: { in: raffleIds } },
+      select: { id: true, ticketPrice: true },
+    });
+    const priceMap = Object.fromEntries(raffles.map((r) => [r.id, r.ticketPrice]));
+
     const session = await getServerSession(authOptions);
     const origin  = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
+
+    const items = parsed.data.items as Array<{ raffleId: string; packageType: PackageType; quantity: number }>;
 
     // Authenticated user
     if (session?.user) {
@@ -36,7 +47,8 @@ export async function POST(req: NextRequest) {
       const userName  = session.user.name ?? "Raffler";
 
       const stripeSession = await createCheckoutSession({
-        items:      parsed.data.items as Array<{ raffleId: string; packageType: PackageType; quantity: number }>,
+        items,
+        priceMap,
         userId,
         userEmail,
         userName,
@@ -54,7 +66,8 @@ export async function POST(req: NextRequest) {
     }
 
     const stripeSession = await createCheckoutSession({
-      items:      parsed.data.items as Array<{ raffleId: string; packageType: PackageType; quantity: number }>,
+      items,
+      priceMap,
       guestName,
       guestEmail,
       successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

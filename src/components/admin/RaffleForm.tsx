@@ -13,7 +13,7 @@ const schema = z.object({
   imageUrl:     z.string().url("Enter a valid URL").or(z.literal("")),
   totalTickets: z.coerce.number().int().min(1).max(100000),
   soldTickets:  z.coerce.number().int().min(0).max(100000),
-  ticketPrice:  z.coerce.number().min(0.5).max(100),
+  ticketPrice:  z.coerce.number().min(0.25).max(100),
   drawTime:     z.string().min(1, "Select a draw time"),
   status:       z.enum(["DRAFT", "ACTIVE", "CANCELLED"]),
 });
@@ -163,7 +163,7 @@ export function RaffleForm({ raffle }: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-white/60">Ticket Price (£)</label>
-            <input {...register("ticketPrice")} type="number" min="0.5" step="0.50" className={FIELD} />
+            <input {...register("ticketPrice")} type="number" min="0.25" step="0.25" className={FIELD} />
             {errors.ticketPrice && <p className="mt-1 text-xs text-red-400">{errors.ticketPrice.message}</p>}
           </div>
           <div>
